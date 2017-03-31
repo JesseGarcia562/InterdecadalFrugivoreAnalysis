@@ -1,0 +1,335 @@
+---
+title: "Winter 1999 and 2017 FFA Analysis"
+author: "Jesse Garcia"
+date: "3/2/2017"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#Creating the Two Data Sets and Cleaning Them Up
+
+```{r warning=FALSE, echo=FALSE}
+
+
+#import in Past dataset
+
+Edited_Past_Data_1_2_ <- read.csv("../Cleaned FFA Data Jan And Feb/FFA1999March_7_2017.csv")
+table(Edited_Past_Data_1_2_$Species)
+
+#renaming datset
+
+PastData <-Edited_Past_Data_1_2_
+
+#Removing Turacos
+PastData <- PastData[!(PastData$Species == "GT"),]
+
+#grouping data into primates and birds
+PastData$PrimateBird <- 0
+PastData$PrimateBird[(PastData$Species == "GVT" | PastData$Species == "VT" | PastData$Species == "AGP" | PastData$Species == "APH" | PastData$Species == "BCH" | PastData$Species == "GBT" | PastData$Species == "GFP" | PastData$Species == "GT" | PastData$Species == "PPH" | PastData$Species == "RBDH" | PastData$Species == "WCH" | PastData$Species == "WTH")]="Bird"
+PastData$PrimateBird[PastData$PrimateBird == 0] <- "Primate"
+
+
+#Giving Each observation its Scientific Name for Graph labels
+#Asteriks are to Show statistical significance
+PastData$ScientificName <- "Unknown"
+PastData$ScientificName[PastData$Species == "AGP"] = "Psittacus erithacus"
+PastData$ScientificName[PastData$Species == "APH"] = "Tockus fasciatus" 
+PastData$ScientificName[PastData$Species == "BCH"] = "Ceratogymna atrata"
+PastData$ScientificName[PastData$Species == "GBT"] = "Corythaeola cristata"
+PastData$ScientificName[PastData$Species == "PPH"] = "Bycanistes fistulator"
+PastData$ScientificName[PastData$Species == "RBDH"] = "Tockus camurus"
+PastData$ScientificName[PastData$Species == "WCH"] = "Tropicranus albocristatus"
+PastData$ScientificName[PastData$Species == "WTH"] = "Bycanistes albotibialis"
+PastData$ScientificName[PastData$Species == "GFP"] = "Treron calvus"
+
+#Changing the Names of the  Primate species so they no longer are abbreviations. The asteriks Represent 
+#Significant Differences
+
+PastData$ScientificName[PastData$Species == "GCM"] = "Lophocebus albigena"
+PastData$ScientificName[PastData$Species == "CRG"] = "Cercopithecus pogonias" 
+PastData$ScientificName[PastData$Species == "WNG"] = "Cercopithecus nictitans"
+PastData$ScientificName[PastData$Species == "MM"] = "Cercopithecus cephus"
+PastData$ScientificName[PastData$Species == "CHIMP"] = "Pan troglodytes"
+PastData$ScientificName[PastData$Species == "BWC"] = "Colobus guerza"
+
+#Importing In Present Data set 
+Winter2017FFAData <- read.csv("../Cleaned FFA Data Jan And Feb/FFA2017March_7_2017.csv")
+#Data Has been Cleaned Using the Fixes Documented in The "Checking For Errors Document"
+#Additionaly Two CRG observations were misrecorded as "GRG"" observations. 
+#Fix: 
+Winter2017FFAData$Species[(Winter2017FFAData$Species == "GRG")] = "CRG"
+#Fix Number 2. "AGP" was recorded as "AGP " one time. Needs to be "AGP":
+Winter2017FFAData$Species[(Winter2017FFAData$Species == "AGP ")] = "AGP"
+#Table of how many times we recorded each of the different species. Not their abundance. 
+table(Winter2017FFAData$Species)
+#How many different species we found. There's 16.
+unique(Winter2017FFAData$Species)
+#Removing Fruit walk
+Winter2017FFAData = Winter2017FFAData[!(Winter2017FFAData$Trail=="FW"),]
+#Removing Things farther than 100 from Trail
+Winter2017FFAData = Winter2017FFAData[Winter2017FFAData$Perp <= 100,]
+
+
+
+
+#Removing Turacos
+Winter2017FFAData <- Winter2017FFAData[!(Winter2017FFAData$Species == "GT"),]
+
+#grouping data into primates and birds
+Winter2017FFAData$PrimateBird <- 0
+Winter2017FFAData$PrimateBird[(Winter2017FFAData$Species == "GVT" | Winter2017FFAData$Species == "VT" | Winter2017FFAData$Species == "AGP" | Winter2017FFAData$Species == "APH" | Winter2017FFAData$Species == "BCH" | Winter2017FFAData$Species == "GBT" | Winter2017FFAData$Species == "GFP" | Winter2017FFAData$Species == "GT" | Winter2017FFAData$Species == "PPH" | Winter2017FFAData$Species == "RBDH" | Winter2017FFAData$Species == "WCH" | Winter2017FFAData$Species == "WTH")]="Bird"
+Winter2017FFAData$PrimateBird[Winter2017FFAData$PrimateBird == 0] <- "Primate"
+
+
+#Giving Each observation its Scientific Name for Graph labels
+#Asteriks are to Show statistical significance
+Winter2017FFAData$ScientificName <- "Unknown"
+Winter2017FFAData$ScientificName[Winter2017FFAData$Species == "AGP"] = "Psittacus erithacus"
+Winter2017FFAData$ScientificName[Winter2017FFAData$Species == "APH"] = "Tockus fasciatus" 
+Winter2017FFAData$ScientificName[Winter2017FFAData$Species == "BCH"] = "Ceratogymna atrata"
+Winter2017FFAData$ScientificName[Winter2017FFAData$Species == "GBT"] = "Corythaeola cristata"
+Winter2017FFAData$ScientificName[Winter2017FFAData$Species == "PPH"] = "Bycanistes fistulator"
+Winter2017FFAData$ScientificName[Winter2017FFAData$Species == "RBDH"] = "Tockus camurus"
+Winter2017FFAData$ScientificName[Winter2017FFAData$Species == "WCH"] = "Tropicranus albocristatus"
+Winter2017FFAData$ScientificName[Winter2017FFAData$Species == "WTH"] = "Bycanistes albotibialis"
+Winter2017FFAData$ScientificName[Winter2017FFAData$Species == "GFP"] = "Treron calvus"
+
+#Changing the Names of the  Primate species so they no longer are abbreviations. The asteriks Represent 
+#Significant Differences
+
+Winter2017FFAData$ScientificName[Winter2017FFAData$Species == "GCM"] = "Lophocebus albigena"
+Winter2017FFAData$ScientificName[Winter2017FFAData$Species == "CRG"] = "Cercopithecus pogonias" 
+Winter2017FFAData$ScientificName[Winter2017FFAData$Species == "WNG"] = "Cercopithecus nictitans"
+Winter2017FFAData$ScientificName[Winter2017FFAData$Species == "MM"] = "Cercopithecus cephus"
+Winter2017FFAData$ScientificName[Winter2017FFAData$Species == "CHIMP"] = "Pan troglodytes"
+Winter2017FFAData$ScientificName[Winter2017FFAData$Species == "BWC"] = "Colobus guerza"
+
+
+#Labeling Old Data as Old, New Data as new
+
+Winter2017FFAData$Year <- "2017"
+PastData$Year <- "1999"
+
+#Removing Columns that Can't be merged because they are of different units in the past and Present
+ColumnsToRemovePresent <- names(Winter2017FFAData) %in% c("Time", "Distance.frm.Start")
+
+ColumnsToRemovePast <- names(PastData) %in% c("Time", "Distance.frm.Start")
+
+Winter2017FFAData <- Winter2017FFAData[,!ColumnsToRemovePresent]
+PastData <- PastData[,!ColumnsToRemovePast]
+```
+
+#Merging Past And Present Data Sets
+
+```{r}
+require(dplyr)
+
+MergedFFAData <- bind_rows(Winter2017FFAData, PastData)
+
+table(MergedFFAData$Species)
+table(MergedFFAData$Trail)
+summary(MergedFFAData$Perp)
+
+```
+
+#Splitting Past and Present Data Sets Into Birds And Primates
+```{r echo=FALSE}
+#Seperating into Primate Data and Bird Data
+MergedFFADataBirds <- MergedFFAData[MergedFFAData$PrimateBird == "Bird",]
+MergedFFADataPrimates <- MergedFFAData[MergedFFAData$PrimateBird == "Primate",]
+```
+
+
+#Creating A Histogram Of Bird Encounters Over Time
+```{r echo=FALSE}
+#Creating a histogram of encounters
+library(ggplot2)
+
+##Attempting to Create Histogram Ordered by least Encountered Species in the past to most encountered species in the past
+
+#Seperating Past And Present Data
+MergedFFADataBirdsPast <- MergedFFADataBirds[MergedFFADataBirds$Year == "1999",]
+#Summing Encounter Events by Species. Creating a "named vector"
+SummarizedEncounterFFADataBirdsPast <- table(MergedFFADataBirdsPast$ScientificName)
+#Finding the order of this named vector from smallest to largest
+OrderOfPastEncounters <- order(SummarizedEncounterFFADataBirdsPast)
+#Getting Names of Named vector ordered by encounter events!
+OrderedBirdsPastEncounters <- names(SummarizedEncounterFFADataBirdsPast)[OrderOfPastEncounters]
+
+#Factoring Merged Bird Data with new "levels" that are defined by our Order
+MergedFFADataBirds$ScientificName <- factor(MergedFFADataBirds$ScientificName, levels = OrderedBirdsPastEncounters)
+
+#Making a style for our graph to italicize Species Names
+italic.16.text <- element_text(face = "italic", color = "black", size = 8)
+## axis.text.x for x axis only
+
+ggplot(MergedFFADataBirds, aes(fill=Year, x=ScientificName)) + geom_bar(position = "dodge") + ggtitle("Changes in Groups of Bird Encounter Events Over Time") + ylab("Number Of Groups of Bird Encounters ") + labs(fill = "Year", x = "Species") + theme(plot.title = element_text(color="black", size=14, face="bold.italic", hjust = 0.5)) + theme_bw() + theme(plot.title = element_text(hjust = 0.5),axis.text.x = italic.16.text)
+```
+
+
+#Creating a Histogram of Primate Encounters Over Time
+```{r echo= FALSE}
+#Creating a histogram of encounters
+library(ggplot2)
+
+#Seperating Primate Encounter into a past data frame so that histogram is order from lowest to highest encounter events of past
+MergedFFADataPrimatesPast <- MergedFFADataPrimates[MergedFFADataPrimates$Year == "1999",]
+#Getting Encounter events
+SummarizedPastPrimateEncounters <- table(MergedFFADataPrimatesPast$ScientificName)
+#Ordering Past Encounters by how often they show up in data set (lowest to highest)
+OrderOfPastEncounters <- order(SummarizedPastPrimateEncounters)
+
+#ATTEMPTING TO ORDER HISTOGRAM BY LOWEST TO HIGHEST ABUNDANCES OF PAST DATA. Lol did it
+#First Get only Past Data
+#Now set the levels of the Dataset we want to use, to be the Names of the ordered Past data from lowest number to highest. 
+MergedFFADataPrimates$ScientificName <- factor(MergedFFADataPrimates$ScientificName, levels = names(SummarizedPastPrimateEncounters)[OrderOfPastEncounters])  # notice the changed order of factor levels
+
+#Making a style for our graph to italicize Species Names
+italic.16.text <- element_text(face = "italic", color = "black", size = 8)
+## axis.text.x for x axis only
+
+
+
+
+ggplot(MergedFFADataPrimates, aes(fill=Year, x=ScientificName)) + geom_bar(position = "dodge") + ggtitle("Changes in Groups of Primate Encounter Events Over Time") + ylab("Number Of Groups of Primate Encounters ") + labs(fill = "Year", x = "Species") + theme(plot.title = element_text(color="black", size=14, face="bold.italic", hjust = 0.5)) + theme_bw() + theme(plot.title = element_text(hjust = 0.5),axis.text.x = italic.16.text)
+```
+
+#Creating A Histogram Of Estimated Individual of Encounterd Primates Over Time
+
+```{r echo=FALSE}
+#Summing Number of Primate Species By  Year
+NumberOfPrimatesByEncounter <- aggregate(Number ~ ScientificName + Year, MergedFFADataPrimates, sum)
+#ATTEMPTING TO ORDER HISTOGRAM BY LOWEST TO HIGHEST ABUNDANCES OF PAST DATA. Lol did it
+#First Get only Past Data
+NumberOfPrimatesByEncounterPast <- NumberOfPrimatesByEncounter[NumberOfPrimatesByEncounter$Year == "1999",]
+#Now set the levels of the Dataset we want to use, to be the Names of the ordered Past data from lowest number to highest. 
+NumberOfPrimatesByEncounter$ScientificName <- factor(NumberOfPrimatesByEncounter$ScientificName, levels = NumberOfPrimatesByEncounterPast$ScientificName[order(NumberOfPrimatesByEncounterPast$Number)])  # notice the changed order of factor levels
+#Graph
+ggplot(NumberOfPrimatesByEncounter, aes(x = ScientificName, y = Number, fill = Year)) + geom_bar(stat = "identity", position  = "dodge") + ggtitle("Encounter Abundance of Primates 1999 vs 2017") + ylab("Total Number of Individuals Encountered") + labs(fill = "Year", x = "Species") +  theme(plot.title = element_text(color="black", size=14, face="bold.italic", hjust = 0.5)) + theme_bw() + theme(plot.title = element_text(hjust = 0.5),axis.text.x = italic.16.text)
+ggsave("EncounterAbundancePrimates.png", width = 13, height = 8)
+
+```
+
+
+#Creating A Histogram of Estimated Individual of Encounterd Birds Over Time
+```{r echo=FALSE}
+#Summing Number of Bird Species By  Year
+NumberOfBirdsByEncounters <- aggregate(Number ~ ScientificName + Year, MergedFFADataBirds, sum)
+
+#ATTEMPTING TO ORDER HISTOGRAM BY LOWEST TO HIGHEST ABUNDANCES OF PAST DATA. Lol did it
+#First Get only Past Data
+NumberOfBirdsByEncountersPast <- NumberOfBirdsByEncounters[NumberOfBirdsByEncounters$Year == "1999",]
+#Now set the levels of the Dataset we want to use, to be the Names of the ordered Past data from lowest number to highest. 
+NumberOfBirdsByEncounters$ScientificName <- factor(NumberOfBirdsByEncounters$ScientificName, levels = NumberOfBirdsByEncountersPast$ScientificName[order(NumberOfBirdsByEncountersPast$Number)])  # notice the changed order of factor levels
+#Graph
+ggplot(NumberOfBirdsByEncounters, aes(x = ScientificName, y = Number, fill = Year)) + geom_bar(stat = "identity", position  = "dodge") + ggtitle("Encounter Abundance of Birds 1999 vs 2017") + ylab("Total Number of Individuals Encountered") + labs(fill = "Year", x = "Species") +  theme(plot.title = element_text(color="black", size=14, face="bold.italic", hjust = 0.5)) + theme_bw() + theme(plot.title = element_text(hjust = 0.5),axis.text.x = italic.16.text)
+ggsave("EncounterAbundanceBirds.png", width = 13, height = 8)
+```
+
+
+#Exploratory Regression On Primates (EVERYTHING BElOW NOT INCLUDED IN PROJECT. ROUGH EXPLORATORY ANALYSIS)
+```{r}
+
+#Checking if Past Precent Predicts Current Percent
+MergedFFADataPrimates <- aggregate(Number ~ ScientificName + Year, MergedFFADataPrimates, sum)
+MergedFFADataPrimatesPast <- MergedFFADataPrimates[MergedFFADataPrimates$Year == "1999",]
+MergedFFADataPrimatesPresent <- MergedFFADataPrimates[!MergedFFADataPrimates$Year == "1999",]
+MergedFFADataPrimatesPastTotal <- sum(MergedFFADataPrimatesPast$Number)
+MergedFFADataPrimatesPresentTotal <- sum(MergedFFADataPrimatesPresent$Number)
+MergedFFADataPrimatesPast$PastPercent <- MergedFFADataPrimatesPast$Number/MergedFFADataPrimatesPastTotal
+MergedFFADataPrimatesPresent$PresentPercent <-  MergedFFADataPrimatesPresent$Number/MergedFFADataPrimatesPresentTotal
+require(dplyr)
+MergedPercents <- bind_cols(MergedFFADataPrimatesPast , MergedFFADataPrimatesPresent)
+PrimatePercents <- MergedPercents
+plot(MergedPercents$PastPercent, MergedPercents$PresentPercent)
+MergedPercentsModel <- lm(PastPercent~PresentPercent, MergedPercents)
+summary(MergedPercentsModel)
+
+#Plain number regression
+MergedFFADataPrimates <- aggregate(Number ~ ScientificName + Year, MergedFFADataPrimates, sum)
+MergedFFADataPrimatesPast <- MergedFFADataPrimates[MergedFFADataPrimates$Year == "1999",]
+MergedFFADataPrimatesPresent <- MergedFFADataPrimates[!MergedFFADataPrimates$Year == "1999",]
+MergedFFADataPrimatesPastTotal <- sum(MergedFFADataPrimatesPast$Number)
+MergedFFADataPrimatesPresentTotal <- sum(MergedFFADataPrimatesPresent$Number)
+MergedFFADataPrimatesPast$PastPercent <- MergedFFADataPrimatesPast$Number
+MergedFFADataPrimatesPresent$PresentPercent <-  MergedFFADataPrimatesPresent$Number
+require(dplyr)
+MergedPercents <- bind_cols(MergedFFADataPrimatesPast , MergedFFADataPrimatesPresent)
+plot(MergedPercents$PastPercent, MergedPercents$PresentPercent)
+MergedPercentsModel <- lm(PastPercent~PresentPercent, MergedPercents)
+summary(MergedPercentsModel)
+
+
+
+```
+
+#Regression With Birds
+```{r}
+#Checking if Past Precent Predicts Current Percent
+MergedFFADataBirds <- aggregate(Number ~ ScientificName + Year, MergedFFADataBirds, sum)
+MergedFFADataBirdsPast <- MergedFFADataBirds[MergedFFADataBirds$Year == "1999",]
+MergedFFADataBirdsPresent <- MergedFFADataBirds[!MergedFFADataBirds$Year == "1999",]
+MergedFFADataBirdsPastTotal <- sum(MergedFFADataBirdsPast$Number)
+MergedFFADataBirdsPresentTotal <- sum(MergedFFADataBirdsPresent$Number)
+MergedFFADataBirdsPast$PastPercent <- MergedFFADataBirdsPast$Number/MergedFFADataBirdsPastTotal
+MergedFFADataBirdsPresent$PresentPercent <-  MergedFFADataBirdsPresent$Number/MergedFFADataBirdsPresentTotal
+require(dplyr)
+MergedPercents <- bind_cols(MergedFFADataBirdsPast , MergedFFADataBirdsPresent)
+plot(MergedPercents$PastPercent, MergedPercents$PresentPercent)
+MergedPercentsModel <- lm(PastPercent~PresentPercent, MergedPercents)
+BirdPercents <- MergedPercents
+summary(MergedPercentsModel)
+
+#Plain number regression
+MergedFFADataBirds <- aggregate(Number ~ ScientificName + Year, MergedFFADataBirds, sum)
+MergedFFADataBirdsPast <- MergedFFADataBirds[MergedFFADataBirds$Year == "1999",]
+MergedFFADataBirdsPresent <- MergedFFADataBirds[!MergedFFADataBirds$Year == "1999",]
+MergedFFADataBirdsPastTotal <- sum(MergedFFADataBirdsPast$Number)
+MergedFFADataBirdsPresentTotal <- sum(MergedFFADataBirdsPresent$Number)
+MergedFFADataBirdsPast$PastPercent <- MergedFFADataBirdsPast$Number
+MergedFFADataBirdsPresent$PresentPercent <-  MergedFFADataBirdsPresent$Number
+require(dplyr)
+MergedPercents <- bind_cols(MergedFFADataBirdsPast , MergedFFADataBirdsPresent)
+plot(MergedPercents$PastPercent, MergedPercents$PresentPercent)
+MergedPercentsModel <- lm(PastPercent~PresentPercent, MergedPercents)
+summary(MergedPercentsModel)
+
+
+```
+
+#Merging Birds and Primates
+```{r}
+
+PrimatePercents
+BirdPercents
+MergedPercents <- MergedPercents[-c(15,4),]
+plot(MergedPercents)
+MergedPercentsModel <- lm(PresentPercent~PastPercent, MergedPercents)
+summary(MergedPercents)
+plot(MergedPercents)
+
+MergedPercents
+```
+```{r}
+ShannonIndexStats <- read.csv("ShannonIndexTtest.csv")
+
+p <- ggplot(ShannonIndexStats, aes(fill=Year, y=Shannon_Index, x=Year))
+limits <- aes(ymax = Shannon_Index + CI, ymin= Shannon_Index - CI)
+p + geom_bar(position=dodge, stat = "identity") + geom_errorbar(limits, position=dodge, width=0.25) + labs(y="Shannon Index", x = "Time Period", title = "Shannon's Index Comparison (Encountered Abundances)") + theme(legend.title=element_blank()) 
+
+par(mfrow=c(1,2))
+ShannonIndexStats <- read.csv("ShannonIndexTtest2.csv")
+
+p <- ggplot(ShannonIndexStats, aes(fill=Year, y=Shannon_Index, x=Year))
+limits <- aes(ymax = Shannon_Index + CI, ymin= Shannon_Index - CI)
+p + geom_bar(position=dodge, stat = "identity") + geom_errorbar(limits, position=dodge, width=0.25) + labs(y="Shannon Index", x = "Time Period", title = "Shannon's Index Comparison (Distance Estimated Abundances)") + theme(legend.title=element_blank()) 
+```
+
+

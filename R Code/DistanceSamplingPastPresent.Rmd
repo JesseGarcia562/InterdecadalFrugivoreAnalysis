@@ -1,0 +1,232 @@
+---
+title: "FFADistance2.0"
+author: "Jesse Garcia"
+date: "March 4, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+Using the R package Distance perform distance sampling and calculate abundance. 
+```{r cars}
+Winter2017FFAData <- read.csv("../Cleaned FFA Data Jan And Feb/FFA2017March_7_2017.csv", header = TRUE)
+
+#Creating Perpendicular Distances from trail using Trigonometry
+#Absolute Value of Distance * sin theta
+Winter2017FFAData$PerpendicularDistances<- abs(Winter2017FFAData$Obs.Anml.Dist * sin(Winter2017FFAData$Angle*(3.14159/180)))
+library(Distance)
+summary(Winter2017FFAData$Obs.Anml.Dist)
+#Removing Values greater than 100
+Winter2017FFAData <- Winter2017FFAData[(Winter2017FFAData$Obs.Anml.Dist <= 100),] 
+summary(Winter2017FFAData$Obs.Anml.Dist)
+```
+
+## Data Setup
+
+Getting the three tables Ready as specified and required by Distance's manual and protocol.
+
+#Region Table
+```{r pressure, echo=TRUE}
+#Region Label is 1 Because Bouamir Research Station is 1
+#Area is 25000000 m2
+
+regions <- data.frame(Region.Label = 1, Area= 25000000)
+
+```
+
+
+#Sample Table
+```{r}
+#There's 10 different trails
+Region.Label=c(rep(1,10))
+
+#Names of each trail
+Sample.Label <- c("Bouamir", "Nest", "Elephant", "CDC", "Blowdown", "Entrance Trail", "RDA", "SB SWAMP LOOP","Jello", "Mbassako")
+
+#Effort refers to the length of each trail. Multiplied by 4 because we conducted 4 surveys. 
+Effort = c(4*960,4*1840,4*2305,4*2410,4*1375,4*3200,4*550,4*800,4*2100,4*1760)
+samples <- data.frame(Region.Label=Region.Label, Sample.Label = Sample.Label, Effort = Effort)
+```
+
+
+
+#Creating a function that automates Distance analysis for our data and tables.
+
+```{r}
+require(Distance)
+#Removing Things not on Trails
+Winter2017FFAData <- Winter2017FFAData[!Winter2017FFAData$Repetition == 0,]
+Winter2017FFAData <- Winter2017FFAData[!Winter2017FFAData$Trail == "Fruitwalk",]
+Winter2017FFAData$Repetition = 1
+UsingDistance <- function(Winter2017FFAData,Species,DistanceLimit) {
+#Creating Perpendicular Distances using Trigonometry
+#Absolute Value of Distance * sin theta
+Winter2017FFAData$PerpendicularDistances<- abs(Winter2017FFAData$Obs.Anml.Dist * sin(Winter2017FFAData$Angle*(3.14159/180)))
+#Removing Values greater than 100
+Winter2017FFAData <- Winter2017FFAData[(Winter2017FFAData$PerpendicularDistances <= DistanceLimit),] 
+BCHDistances <- Winter2017FFAData$PerpendicularDistances[Winter2017FFAData$Species == Species]
+BCHObject <- 1:length(BCHDistances)
+Region.Label <- Winter2017FFAData$Repetition[Winter2017FFAData$Species == Species ]
+Sample.Label <- Winter2017FFAData$Trail[Winter2017FFAData$Species == Species ]
+#Population Size 
+size <- Winter2017FFAData$Number[Winter2017FFAData$Species == Species ]
+    data <- data.frame(distance      = BCHDistances,
+                       object        = BCHObject,
+                       Region.Label  = Region.Label,
+                       Sample.Label  = Winter2017FFAData$Trail[Winter2017FFAData$Species == Species ],
+                       size = size)
+model <-    ds(data = data, sample.table = samples, region.table = regions, dht.group = FALSE)
+}
+```
+
+
+# Modeling probability functions for 2017 Survey Data. 
+
+
+```{r}
+AGPModel <- UsingDistance(Winter2017FFAData = Winter2017FFAData, Species = "AGP", 100)
+GCMModel <- UsingDistance(Winter2017FFAData, Species = "GCM", 100)
+CRGModel <- UsingDistance(Winter2017FFAData = Winter2017FFAData, Species = "CRG", 100)
+WNG <- UsingDistance(Winter2017FFAData = Winter2017FFAData, Species = "WNG", 100)
+GFP <- UsingDistance(Winter2017FFAData = Winter2017FFAData, Species = "GFP", 100)
+BCH <- UsingDistance(Winter2017FFAData = Winter2017FFAData, Species = "BCH", 100)
+MM <- UsingDistance(Winter2017FFAData = Winter2017FFAData, Species = "MM", 100)
+APH <- UsingDistance(Winter2017FFAData = Winter2017FFAData, Species = "APH", 100)
+RBDH <- UsingDistance(Winter2017FFAData = Winter2017FFAData, Species = "RBDH", 100)
+WCH <- UsingDistance(Winter2017FFAData = Winter2017FFAData, Species = "WCH", 100)
+GBT <- UsingDistance(Winter2017FFAData = Winter2017FFAData, Species = "GBT", 100)
+WTH <- UsingDistance(Winter2017FFAData = Winter2017FFAData, Species = "WTH", 100)
+GT <- UsingDistance(Winter2017FFAData = Winter2017FFAData, Species = "GT", 100)
+#BWC Doesnt converge
+#BWC <- UsingDistance(Winter2017FFAData = Winter2017FFAData, Species = "BWC", 100)
+#VT Not In our Data
+#VT <- UsingDistance(Winter2017FFAData = Winter2017FFAData, Species = "VT", 100)
+#Chimp Not in our data set
+#CHIMP <- UsingDistance(Winter2017FFAData = Winter2017FFAData, Species = "CHIMP", 100)
+#GT Not in our Data Set
+#GT <- UsingDistance(Winter2017FFAData = Winter2017FFAData, Species = "GT", 100)
+PPH <- UsingDistance(Winter2017FFAData = Winter2017FFAData, Species = "PPH", 100)
+#GVT Doesnt work
+#GVT <- UsingDistance(Winter2017FFAData = Winter2017FFAData, Species = "GVT", 100)
+```
+## 2017 Data Results. Commented out models did not work for the reasons specified above
+```{r}
+summary(AGPModel)
+summary(GCMModel)
+summary(CRGModel)
+summary(WNG)
+summary(GFP)
+summary(BCH)
+summary(MM)
+summary(APH)
+summary(RBDH)
+summary(WCH)
+summary(GBT)
+summary(WTH)
+summary(GT)
+#summary(BWC)
+#summary(VT)
+#summary(CHIMP)
+#summary(GT)
+summary(PPH)
+#summary(GVT)
+```
+
+## DISTANCE Sampling For 1999 Data
+```{r}
+require(Distance)
+Winter1999FFAData<-read.csv("../Cleaned FFA Data Jan And Feb/FFA1999March_7_2017.csv")
+UsingDistanceOld <- function(Winter1999FFAData,Species,DistanceLimit) {
+  #Creating Perpendicular Distances using Trigonometry
+  #Absolute Value of Distance * sin theta
+  Winter1999FFAData$PerpendicularDistances<- Winter1999FFAData$Perp
+  #Removing Values greater than 100
+  Winter1999FFAData <- Winter1999FFAData[(Winter1999FFAData$PerpendicularDistances <= DistanceLimit),] 
+  BCHDistances <- Winter1999FFAData$PerpendicularDistances[Winter1999FFAData$Species == Species]
+  BCHObject <- 1:length(BCHDistances)
+  Region.Label <- 1
+  Sample.Label <- Winter1999FFAData$Trail[Winter1999FFAData$Species == Species ]
+  #Population Size 
+  size <- Winter1999FFAData$Number[Winter1999FFAData$Species == Species ]
+  data <- data.frame(distance      = BCHDistances,
+                     object        = BCHObject,
+                     Region.Label  = Region.Label,
+                     Sample.Label  = Winter1999FFAData$Trail[Winter1999FFAData$Species == Species ],
+                     size = size)
+  model <-    ds(data = data, sample.table = samples, region.table = regions, dht.group = FALSE)
+}
+
+
+## Data Setup
+
+#Getting the three tables Ready
+
+#Region Table
+
+#Region Label is 1 Because Bouamir Research Station is 1
+#Area is 25000 m2
+
+
+regions <- data.frame(Region.Label = 1, Area= 25000000)
+
+
+#Sample Table
+
+Region.Label=c(rep(1,10))
+Sample.Label <- c("BOU", "N6", "ELE", "CDC", "BD", "ET", "RDA", "SB","JL", "MBA")
+Effort = c(4*960,4*1840,4*2305,4*2410,4*1375,4*3200,4*550,4*800,4*2100,4*1760)
+samples <- data.frame(Region.Label=Region.Label, Sample.Label = Sample.Label, Effort = Effort)
+
+AGPModel <- UsingDistanceOld(Winter1999FFAData = Winter1999FFAData, Species = "AGP", 100)
+GCMModel <- UsingDistanceOld(Winter1999FFAData, Species = "GCM", 100)
+CRGModel <- UsingDistanceOld(Winter1999FFAData = Winter1999FFAData, Species = "CRG", 100)
+WNG <- UsingDistanceOld(Winter1999FFAData = Winter1999FFAData, Species = "WNG", 100)
+GFP <- UsingDistanceOld(Winter1999FFAData = Winter1999FFAData, Species = "GFP", 100)
+BCH <- UsingDistanceOld(Winter1999FFAData = Winter1999FFAData, Species = "BCH", 100)
+MM <- UsingDistanceOld(Winter1999FFAData = Winter1999FFAData, Species = "MM", 100)
+APH <- UsingDistanceOld(Winter1999FFAData = Winter1999FFAData, Species = "APH", 100)
+RBDH <- UsingDistanceOld(Winter1999FFAData = Winter1999FFAData, Species = "RBDH", 100)
+WCH <- UsingDistanceOld(Winter1999FFAData = Winter1999FFAData, Species = "WCH", 100)
+GBT <- UsingDistanceOld(Winter1999FFAData = Winter1999FFAData, Species = "GBT", 100)
+WTH <- UsingDistanceOld(Winter1999FFAData = Winter1999FFAData, Species = "WTH", 100)
+GT <- UsingDistanceOld(Winter1999FFAData = Winter1999FFAData, Species = "GT", 100)
+BWC <- UsingDistanceOld(Winter1999FFAData = Winter1999FFAData, Species = "BWC", 100)
+VT <- UsingDistanceOld(Winter1999FFAData = Winter1999FFAData, Species = "VT", 100)
+CHIMP <- UsingDistanceOld(Winter1999FFAData = Winter1999FFAData, Species = "CHIMP", 100)
+GT <- UsingDistanceOld(Winter1999FFAData = Winter1999FFAData, Species = "GT", 100)
+PPH <- UsingDistanceOld(Winter1999FFAData = Winter1999FFAData, Species = "PPH", 100)
+GVT <- UsingDistanceOld(Winter1999FFAData = Winter1999FFAData, Species = "GVT", 100)
+
+
+
+```
+
+
+##Old Results
+```{r}
+summary(AGPModel)
+summary(GCMModel)
+summary(CRGModel)
+summary(WNG)
+summary(GFP)
+summary(BCH)
+summary(MM)
+summary(APH)
+summary(RBDH)
+summary(WCH)
+summary(GBT)
+summary(WTH)
+summary(GT)
+summary(BWC)
+summary(VT)
+summary(CHIMP)
+summary(GT)
+summary(PPH)
+summary(GVT)
+
+```
+

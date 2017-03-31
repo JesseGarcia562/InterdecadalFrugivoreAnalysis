@@ -1,0 +1,143 @@
+---
+title: "FFA Winter 2017 Exploratory Analysis"
+author: "Jesse Garcia"
+date: "February 27, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+```
+
+## Introduction
+
+In this document we are going to be calculating different biodiversity related statics. 
+
+#Species Richness
+Species richness is often defined as the total number of species in the community. Emily found that The Dja Hornbill Project recorded 23 different species in this region during January-February. We found 16 different species. 
+
+```{r cars}
+Winter2017FFAData <- read.csv("../Cleaned FFA Data Jan And Feb/FFA2017March_7_2017.csv", header = TRUE)
+#Data Has been Cleaned Using the Fixes Documented in The "Checking For Errors Document"
+#Additionaly Two CRG observations were misrecorded as "GRG"" observations. 
+#Fix: 
+Winter2017FFAData$Species[(Winter2017FFAData$Species == "GRG")] = "CRG"
+#Fix Number 2. "AGP" was recorded as "AGP " one time. Needs to be "AGP":
+Winter2017FFAData$Species[(Winter2017FFAData$Species == "AGP ")] = "AGP"
+#Table of how many times we recorded each of the different species. Not their abundance. 
+table(Winter2017FFAData$Species)
+#How many different species we found. There's 16.
+unique(Winter2017FFAData$Species)
+
+```
+
+Species we didn't observe but have been previously observed in the area: **Verreaux's tauraco, Black dwarf hornbilll, Purple glossy starling, Splendid glossy starling, DeBrazza's monkey, Talapoin, Gorilla**. Some of these species--like Verreaux's tauraco--don't have ranges in this area, but were previously recorded here somehow. 
+
+# Numerical Analysis of Species Encounter Events
+
+```{r pressure, warning=FALSE}
+suppressPackageStartupMessages(library(ggplot2))
+#Labeling Primates and Birds
+Winter2017FFAData$PrimateBird <- 0
+Winter2017FFAData$PrimateBird[(Winter2017FFAData$Species == "AGP" | Winter2017FFAData$Species == "APH" | Winter2017FFAData$Species == "BCH" | Winter2017FFAData$Species == "GBT" | Winter2017FFAData$Species == "GFP" | Winter2017FFAData$Species == "GT" | Winter2017FFAData$Species == "PPH" | Winter2017FFAData$Species == "RBDH" | Winter2017FFAData$Species == "WCH" | Winter2017FFAData$Species == "WTH")]="Bird"
+#Everything Else with a 0 left is a Primate
+Winter2017FFAData$PrimateBird[Winter2017FFAData$PrimateBird == 0] <- "Primate"
+#Actual Code For Graph
+ggplot(Winter2017FFAData, aes(x = Species)) + geom_bar(aes(fill=PrimateBird)) + ggtitle("Species Encounter Events (Winter 2017)") + ylab("Count") + labs(fill = "Classification") + theme(plot.title = element_text(color="black", size=14, face="bold.italic", hjust = 0.5))
+```
+
+This graph is not incorporating the estimated group size of the encounter. It is merely presenting the amount of times we encountered a group/indiviual of a specific species. Birds were encountered many more times than primates.
+
+```{r, warning=FALSE}
+suppressPackageStartupMessages(library(plotly))
+#Summing Birds and Primates for Pie Chart
+SumOfPrimateBirds <- c(sum(Winter2017FFAData$PrimateBird == "Primate"),sum(Winter2017FFAData$PrimateBird == "Bird"))
+#Need For Pie Chart
+PrimateBirdLabels <- c("Primates", "Birds")
+p <- plot_ly(labels = PrimateBirdLabels, values = ~SumOfPrimateBirds, type = 'pie',  textposition = 'inside',
+        textinfo = 'label+percent',
+        insidetextfont = list(color = '#FFFFFF'),
+        hoverinfo = 'text',) %>%
+  layout(title = 'Distribution of Species Encounter Events (Winter 2017)',
+         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+p
+```
+
+We recorded data about frugivorous birds 3 times more than we did for primates. 
+
+# Analysis of Abundance of Different Species
+
+```{r}
+suppressPackageStartupMessages(library(ggplot2))
+#Labeling Primates and Birds
+Winter2017FFAData$PrimateBird <- 0
+Winter2017FFAData$PrimateBird[(Winter2017FFAData$Species == "AGP" | Winter2017FFAData$Species == "APH" | Winter2017FFAData$Species == "BCH" | Winter2017FFAData$Species == "GBT" | Winter2017FFAData$Species == "GFP" | Winter2017FFAData$Species == "GT" | Winter2017FFAData$Species == "PPH" | Winter2017FFAData$Species == "RBDH" | Winter2017FFAData$Species == "WCH" | Winter2017FFAData$Species == "WTH")]="Bird"
+#Everything Else with a 0 left is a Primate
+Winter2017FFAData$PrimateBird[Winter2017FFAData$PrimateBird == 0] <- "Primate"
+#Actual Code For Graph
+ggplot(Winter2017FFAData, aes(x = Species, y=Number)) + geom_bar(aes(fill=PrimateBird) , stat = "identity") + ggtitle("Species Abundance Distribution (Winter 2017)") + ylab("Count") + labs(fill = "Classification") + theme(plot.title = element_text(color="black", size=14, face="bold.italic", hjust = 0.5))
+
+```
+
+```{r}
+SumOfPrimateBirdsAbundances <- c(sum(Winter2017FFAData$Number[Winter2017FFAData$PrimateBird == "Primate"]),sum(Winter2017FFAData$Number[Winter2017FFAData$PrimateBird == "Bird"]))
+#Need For Pie Chart
+PrimateBirdLabels <- c("Primates", "Birds")
+p <- plot_ly(labels = PrimateBirdLabels, values = ~SumOfPrimateBirdsAbundances, type = 'pie',  textposition = 'inside',
+        textinfo = 'label+percent',
+        insidetextfont = list(color = '#FFFFFF'),
+        hoverinfo = 'text',) %>%
+  layout(title = 'Distribution of Species Abundances (Winter 2017)',
+         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+p
+```
+
+# Shannon Diversity Index (Winter 2017)
+```{r}
+SpeciesAbundance <- aggregate(Number ~ Species,Winter2017FFAData,sum)
+#Total Sum of Abundance
+AbundanceSum <- sum(SpeciesAbundance$Number)
+#Shannon Index Formula
+SpeciesAbundance$ShannonIndex <- (SpeciesAbundance$Number/AbundanceSum)*log((SpeciesAbundance$Number/AbundanceSum))
+TotalShannonIndex <- -1*sum(SpeciesAbundance$ShannonIndex)
+TotalShannonIndex
+```
+Shannon Diversity is a unitless number. Usually means nothing unless it is being compared to another Shannon Diversity index. Need to calculate this statistic for previous data. "Shannon's index accounts for both abundance and evenness of the species present. The proportion of species i relative to the total number of species (pi) is calculated, and then multiplied by the natural logarithm of this proportion (lnpi). The resulting product is summed across species, and multiplied by -1:" (UTK)
+
+# Shannon's Equitability Index (Winter 2017)
+```{r}
+SpeciesNumber <- length(unique(Winter2017FFAData$Species)) #Number of Species
+ShannonIndexMax <- log(SpeciesNumber)
+Equitability <- TotalShannonIndex/ShannonIndexMax
+Equitability
+```
+"Shannon's equitability (EH) can be calculated by dividing H by Hmax (here Hmax = ln(NumberOfSpecies)). Equitability assumes a value between 0 and 1 with 1 being complete evenness." (UTK)
+
+# Simpsons Diversity Index (Winter 2017)
+```{r}
+SpeciesAbundance <- aggregate(Number ~ Species,Winter2017FFAData,sum)
+#Total Sum of Abundance
+AbundanceSum <- sum(SpeciesAbundance$Number)
+#Simpsons Diversity Index Formula
+SpeciesAbundance$PortionsSquared <- (SpeciesAbundance$Number/AbundanceSum)^2
+PortionsSum <- sum(SpeciesAbundance$PortionsSquared)
+SimpsonsIndex <- 1/PortionsSum
+SimpsonsIndex
+```
+"Simpson's diversity index (D) is a simple mathematical measure that characterizes species diversity in a community. The proportion of species i relative to the total number of species (pi) is calculated and squared. The squared proportions for all the species are summed, and the reciprocal is taken:" (UTK)
+
+#Simpsons Equitability
+```{r}
+SpeciesNumber <- length(unique(Winter2017FFAData$Species))
+SimpsonEquitability <- SimpsonsIndex*(1/SpeciesNumber)
+SimpsonEquitability
+```
+"For a given richness (S), D increases as equitability increases, and for a given equitability D increases as richness increases. Equitability (ED) can be calculated by taking Simpson's index (D) and expressing it as a proportion of the maximum value D could assume if individuals in the community were completely evenly distributed (Dmax, which equals S-- as in a case where there was one individual per species). Equitability takes a value between 0 and 1, with 1 being complete evenness." (UTK)
+
+
+
+
+

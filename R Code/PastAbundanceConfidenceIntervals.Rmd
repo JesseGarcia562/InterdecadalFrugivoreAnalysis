@@ -1,0 +1,239 @@
+---
+title: "1999 vs 2017 FFA Abundance Data"
+author: "Jesse Garcia"
+date: "March 3, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+This pipeline turns data formatted as in Emily's abundance excel sheet into Confidence Interval Plots
+
+# Creating 2017 Abundances Using Distance
+
+
+```{r Data Input, warning=FALSE}
+require(ggplot2)
+#Emily and Jesses Data
+PastAbundanceData <- read.csv("C:/Users/jesse/OneDrive - personalmicrosoftsoftware.ucla.edu/Winter 2017/FBQ Winter 2017/Past Abundance Results.csv")
+#Removing NA VALUES
+PastAbundanceData <- na.omit(PastAbundanceData)
+#Turning AVG Abundances into numbers
+#Removing GVT because DISTANCE could not fit models to explain abundance data
+PastAbundanceData$OldOrNew[PastAbundanceData$OldOrNew == "0"] = "1999"
+PastAbundanceData$OldOrNew[PastAbundanceData$OldOrNew == "1"] = "2017"
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "GVT"),]
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "BWC"),]
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "CHIMP"),]
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "GT"),]
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "VT"),]
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "GFP"),]
+#Calculating 95% CI with log normal distributions
+PastAbundanceData$UpperLimit <- PastAbundanceData$UpperBound
+PastAbundanceData$LowerLimit <- PastAbundanceData$LowerBound
+limits <- aes(ymax = UpperLimit, ymin=LowerLimit)
+# we need to specify how wide the objects we are dodging are
+dodge <- position_dodge(width=0.9)
+p <- ggplot(PastAbundanceData, aes(colour=OldOrNew, y=AbundanceEstimate, x=Species, group=OldOrNew)) +
+   geom_errorbar(limits, position=dodge, width=0.25) + geom_point(size = 2, position = dodge) + labs(title = "Present and Past Abundance Estimates (95% Confidence Intervals)")  +  scale_colour_discrete(name = "")
+p
+```
+
+
+##Alright, Attempting Tom's Graphical Edits For Final Draft
+```{r}
+require(ggplot2)
+#Emily and Jesses Data
+PastAbundanceData <- read.csv("C:/Users/jesse/OneDrive - personalmicrosoftsoftware.ucla.edu/Winter 2017/FBQ Winter 2017/Past Abundance Results.csv")
+#Removing NA VALUES
+PastAbundanceData <- na.omit(PastAbundanceData)
+#Turning AVG Abundances into numbers
+#Removing GVT, BWC, CHIMP, GT, and GFP because DISTANCE could not fit models to explain abundance data
+PastAbundanceData$OldOrNew[PastAbundanceData$OldOrNew == "0"] = "1999"
+PastAbundanceData$OldOrNew[PastAbundanceData$OldOrNew == "1"] = "2017"
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "GVT"),]
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "BWC"),]
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "CHIMP"),]
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "GT"),]
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "GT"),]
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "GFP"),]
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "VT"),]
+
+#Labeling as Bird or primate
+PastAbundanceData$PrimateBird <- 0
+PastAbundanceData$PrimateBird[(PastAbundanceData$Species == "AGP" | PastAbundanceData$Species == "APH" | PastAbundanceData$Species == "BCH" | PastAbundanceData$Species == "GBT" | PastAbundanceData$Species == "GFP" | PastAbundanceData$Species == "GT" | PastAbundanceData$Species == "PPH" | PastAbundanceData$Species == "RBDH" | PastAbundanceData$Species == "WCH" | PastAbundanceData$Species == "WTH")]="Bird"
+
+#Changing the Names of the  Bird species so they no longer are abbreviations
+#Asteriks are to Show statistical significance
+PastAbundanceData$ScientificName <- "Unknown"
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "AGP"] = "Psittacus erithacus"
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "APH"] = "Tockus fasciatus* (p < .05)" 
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "BCH"] = "Ceratogymna atrata* (p < .05)"
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "GBT"] = "Corythaeola cristata"
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "PPH"] = "Bycanistes fistulator"
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "RBDH"] = "Tockus camurus"
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "WCH"] = "Tropicranus albocristatus"
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "WTH"] = "Bycanistes albotibialis"
+
+#Changing the Names of the  Primate species so they no longer are abbreviations. The asteriks Represent 
+#Significant Differences
+
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "GCM"] = "Lophocebus albigena* (p < .05)"
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "CRG"] = "Cercopithecus pogonias" 
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "WNG"] = "Cercopithecus nictitans"
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "MM"] = "Cercopithecus cephus* (p <.05)"
+
+
+
+
+#Everything Else with a 0 left is a Primate
+PastAbundanceData$PrimateBird[PastAbundanceData$PrimateBird == 0] <- "Primate"
+#Seperating into Primate Data and Bird Data
+PastAbundanceDataBirds <- PastAbundanceData[PastAbundanceData$PrimateBird == "Bird",]
+PastAbundanceDataPrimates <- PastAbundanceData[PastAbundanceData$PrimateBird == "Primate",]
+
+#Making a style for our graph to italicize Species Names
+italic.16.text <- element_text(face = "italic", color = "black", size = 8)
+## axis.text.x for x axis only
+
+
+#Making Bird Graph
+#Calculating 95% CI with log normal distributions for Birds
+PastAbundanceDataBirds$UpperLimit <- PastAbundanceDataBirds$UpperBound
+PastAbundanceDataBirds$LowerLimit <- PastAbundanceDataBirds$LowerBound
+limits <- aes(ymax = UpperLimit, ymin=LowerLimit)
+
+
+
+# we need to specify how wide the objects we are dodging are
+dodge <- position_dodge(width=0.9)
+BirdGraph <- ggplot(PastAbundanceDataBirds, aes(colour=OldOrNew, y=AbundanceEstimate, x=ScientificName, group=OldOrNew)) +
+   geom_errorbar(limits, position=dodge, width=0.25) + geom_point(size = 2, position = dodge) + labs(title = "Present and Past Abundance Estimates of Birds (95% Confidence Intervals)", y = "Abundance Estimates (Number of Individuals)", x = "Species")  +  scale_colour_discrete(name = "Year")  + theme_bw() + theme(plot.title = element_text(hjust = 0.5),axis.text.x = italic.16.text)
+BirdGraph
+ggsave("BirdConfidenceIntervals.png", width=13, height=8, dpi=300)
+
+#Making Primate Graph
+PastAbundanceDataPrimates$UpperLimit <- PastAbundanceDataPrimates$UpperBound
+PastAbundanceDataPrimates$LowerLimit <- PastAbundanceDataPrimates$LowerBound
+limits <- aes(ymax = UpperLimit, ymin=LowerLimit)
+# we need to specify how wide the objects we are dodging are
+dodge <- position_dodge(width=0.9)
+PrimateGraph <- ggplot(PastAbundanceDataPrimates, aes(colour=OldOrNew, y=AbundanceEstimate, x=ScientificName, group=OldOrNew)) + geom_errorbar(limits, position=dodge, width=0.25) + geom_point(size = 2, position = dodge) + labs(title = "Present and Past Abundance Estimates of Primates (95% Confidence Intervals)", y = "Abundance Estimates (Number of Individuals)", x = "Species")  +  scale_colour_discrete(name = "Year") +  theme_bw() + theme(plot.title = element_text(hjust = 0.5),axis.text.x = italic.16.text ,panel.background = element_blank()) 
+PrimateGraph
+ggsave("PrimateConfidenceIntervals.png", width=13, height=8, dpi=300)
+
+```
+
+
+##Attempting Edits for Tom Part 2 
+```{r}
+require(ggplot2)
+#Emily and Jesses Data
+PastAbundanceData <- read.csv("C:/Users/jesse/OneDrive - personalmicrosoftsoftware.ucla.edu/Winter 2017/FBQ Winter 2017/Past Abundance Results.csv")
+#Removing NA VALUES
+PastAbundanceData <- na.omit(PastAbundanceData)
+#Turning AVG Abundances into numbers
+#Removing GVT, BWC, CHIMP, GT, and GFP because DISTANCE could not fit models to explain abundance data
+PastAbundanceData$OldOrNew[PastAbundanceData$OldOrNew == "0"] = "1999"
+PastAbundanceData$OldOrNew[PastAbundanceData$OldOrNew == "1"] = "2017"
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "GVT"),]
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "BWC"),]
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "CHIMP"),]
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "GT"),]
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "GT"),]
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "GFP"),]
+PastAbundanceData <- PastAbundanceData[!(PastAbundanceData$Species == "VT"),]
+
+#Labeling as Bird or primate
+PastAbundanceData$PrimateBird <- 0
+PastAbundanceData$PrimateBird[(PastAbundanceData$Species == "AGP" | PastAbundanceData$Species == "APH" | PastAbundanceData$Species == "BCH" | PastAbundanceData$Species == "GBT" | PastAbundanceData$Species == "GFP" | PastAbundanceData$Species == "GT" | PastAbundanceData$Species == "PPH" | PastAbundanceData$Species == "RBDH" | PastAbundanceData$Species == "WCH" | PastAbundanceData$Species == "WTH")]="Bird"
+
+#Changing the Names of the  Bird species so they no longer are abbreviations
+#Asteriks are to Show statistical significance
+#Removing P-value AND Removing First Name and giving abbreviation 
+PastAbundanceData$ScientificName <- "Unknown"
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "AGP"] = "P. erithacus"
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "APH"] = "T. fasciatus*" 
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "BCH"] = "C. atrata*"
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "GBT"] = "C. cristata"
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "PPH"] = "B. fistulator"
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "RBDH"] = "T. camurus"
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "WCH"] = "T. albocristatus"
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "WTH"] = "B. albotibialis"
+
+#Changing the Names of the  Primate species so they no longer are abbreviations. The asteriks Represent 
+#Significant Differences
+
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "GCM"] = "L. albigena*"
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "CRG"] = "C. pogonias" 
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "WNG"] = "C. nictitans"
+PastAbundanceData$ScientificName[PastAbundanceData$Species == "MM"] = "C. cephus*"
+
+
+
+
+#Everything Else with a 0 left is a Primate
+PastAbundanceData$PrimateBird[PastAbundanceData$PrimateBird == 0] <- "Primate"
+#Seperating into Primate Data and Bird Data
+PastAbundanceDataBirds <- PastAbundanceData[PastAbundanceData$PrimateBird == "Bird",]
+PastAbundanceDataPrimates <- PastAbundanceData[PastAbundanceData$PrimateBird == "Primate",]
+
+#Making a style for our graph to italicize Species Names
+italic.16.text <- element_text(face = "italic", color = "black", size = 8)
+## axis.text.x for x axis only
+
+
+#Making Bird Graph
+#Calculating 95% CI with log normal distributions for Birds
+PastAbundanceDataBirds$UpperLimit <- PastAbundanceDataBirds$UpperBound
+PastAbundanceDataBirds$LowerLimit <- PastAbundanceDataBirds$LowerBound
+limits <- aes(ymax = UpperLimit, ymin=LowerLimit)
+
+
+
+# we need to specify how wide the objects we are dodging are
+dodge <- position_dodge(width=0.9)
+
+#OK one of the edits we needed to do was remove the major axis. This is done with
+#panel.grid.major.x=element_blank() & panel.grind.minor.x=element_blank()
+#Removing Title
+#Removing Y axis from birds so we can place side by side to primates
+#Putting Legend in the upper right hand corner with legend.position=c(.9,.9)
+#Making the Y axis from 0 to 2500
+BirdGraph <- ggplot(PastAbundanceDataBirds, aes(colour=OldOrNew, y=AbundanceEstimate, x=ScientificName, group=OldOrNew)) +
+   geom_errorbar(limits, position=dodge, width=0.25) + geom_point(size = 2, position = dodge) + labs(title = "", y = "", x = "Bird Species")  +  scale_colour_discrete(name = "Year")  + theme_bw() + theme(plot.title = element_text(hjust = 0.5),axis.text.x = italic.16.text,panel.grid.major.x=element_blank(), legend.position=c(.9,.9), axis.text.y = element_blank()) + expand_limits(y=c(0,2500))
+
+
+BirdGraph
+ggsave("BirdConfidenceIntervals.png", width=13, height=8, dpi=300)
+
+#Making Primate Graph
+PastAbundanceDataPrimates$UpperLimit <- PastAbundanceDataPrimates$UpperBound
+PastAbundanceDataPrimates$LowerLimit <- PastAbundanceDataPrimates$LowerBound
+limits <- aes(ymax = UpperLimit, ymin=LowerLimit)
+# we need to specify how wide the objects we are dodging are
+dodge <- position_dodge(width=0.9)
+
+#OK one of the edits we needed to do was remove the major axis. This is done with
+#panel.grid.major.x=element_blank() & panel.grind.minor.x=element_blank()
+#Removing Title
+#Putting Legend in the upper right hand corner with legend.position=c(.8,.8)
+#Making the Y axis from 0 to 2500
+#Remove legend
+PrimateGraph <- ggplot(PastAbundanceDataPrimates, aes(colour=OldOrNew, y=AbundanceEstimate, x=ScientificName, group=OldOrNew)) + geom_errorbar(limits, position=dodge, width=0.25) + geom_point(size = 2, position = dodge) + labs(title = "", y = "Abundance Estimates (Number of Individuals)", x = "Primate Species")  +  scale_colour_discrete(name = "Year") +  theme_bw() + theme(plot.title = element_text(hjust = 0.5),axis.text.x = italic.16.text ,panel.background = element_blank(),  panel.grid.major.x=element_blank(), legend.position=c(.8,.8)) + expand_limits(y=c(0,2500)) + theme(legend.position="none")
+PrimateGraph
+ggsave("PrimateConfidenceIntervals.png", width=13, height=8, dpi=300)
+
+
+
+##Need cowplot to plot grids side by side
+require(cowplot)
+plot1 <- PrimateGraph
+plot2 <- BirdGraph
+plot_grid(plot1, plot2, align='h', labels=c('A)', 'B)'))
+```
+

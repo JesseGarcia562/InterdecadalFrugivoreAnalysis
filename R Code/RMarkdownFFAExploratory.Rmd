@@ -1,0 +1,119 @@
+---
+title: "FFA Winter 2017 Checking Data For Input Errors"
+author: "Jesse Alexander Garcia"
+date: "February 27, 2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE, warning = FALSE, error = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+From January 31, 2017 to February 16, 2017 we conducted a Frugivore Abundance Survey at the Bouamir Research Station in Cameroon Africa. Our methods attempted to replicate the survey conducted in 1995-1998 for the Dja Hornbill Project.
+
+# Recorded Variables
+```{r}
+Winter2017FFAData <- read.csv("../FFA Raw Survey Data/FFA grouped data.csv", header = TRUE)
+```
+```{r echo = FALSE, results='asis', warning=FALSE}
+library(knitr)
+kable(Winter2017FFAData[1:3,], caption = "Our raw data includes various variables that we thought would be relevant to current and future analysis.")
+```
+
+### Cleaning Data
+Checking for obvious data input errors. 
+
+#Species and Estimated Number Check
+```{r}
+summary(Winter2017FFAData$Species)
+summary(Winter2017FFAData$Number)
+```
+There doesn't appear to be any misspelled Species names. Number of individuals for observations looks reasonable as well.No Obvious Errors.
+
+#Mortals Data Check (And Fix)
+```{r}
+summary(Winter2017FFAData$Mortals)
+```
+Our Maximum value for our Mortals variable is 300. I don't recall us estimating 300 individuals for any observation. To check whether this error was made only once, I created a boxplot of our Mortals data.
+```{r}
+boxplot(Winter2017FFAData$Mortals,main="Distribution of Mortals Values", horizontal = TRUE)
+```
+
+Looks like there is only one mistyped value. Its at:
+```{r}
+LocationOfMortalMax <- which.max(Winter2017FFAData$Mortals)
+kable(Winter2017FFAData[LocationOfMortalMax,])
+```
+
+Changing the 300 Value to the correct 30 value. 
+```{r}
+Winter2017FFAData[LocationOfMortalMax,]$Mortals=30
+```
+
+#Angle Check (Big Problems)
+```{r}
+summary(Winter2017FFAData$Angle)
+```
+
+No angle should be greater than 360...Boxplotting our data again.
+
+```{r}
+boxplot(Winter2017FFAData$Angle, main = "Recorded Angles", horizontal = TRUE)
+```
+
+<span style="color:red">Lots of our Values are over 360. Not just One. Big Problem.</span> 
+Table of all of our different angle values. 
+
+```{r}
+table(Winter2017FFAData$Angle)
+```
+
+The errors don't look like simple accidentally pressing a wrong button errors. Looks like "Distance From Starts" were accidentally inputed in the "Angle" category.
+
+```{r}
+LocationOfAngleMax <- which.max(Winter2017FFAData$Angle)
+kable(Winter2017FFAData[(LocationOfAngleMax-10):which.max(Winter2017FFAData$Angle),1:13])
+```
+
+By looking at the area around the largest angle in our data table, errors appear to be grouped together, it does in fact look like an inputing data into the wrong variable error. **Don't have the raw data on hand, so can't fix. Angles need to be looked at and manually reinputed to fix this**. Don't know where the error exactly starts. About how many should be fixed?
+```{r}
+sum(Winter2017FFAData$Angle > 360)
+```
+
+It appears that about 13 errors of this type should need to be fixed.
+
+#Longitude and Latitude Check
+
+To make sure our GPS Points were recorded correctly, I created a quick map with our points. All of our points should fall within Bouamir. If not, there's input errors. 
+
+```{r results='asis', tidy=TRUE, warning=FALSE}
+## Loading googleVis, but supressing its welcome message:
+suppressPackageStartupMessages(library(googleVis))
+op <- options(gvis.plot.tag='chart') #Needed to make the map in the document
+Winter2017FFAData$LatLong <- paste(Winter2017FFAData$Lat, Winter2017FFAData$Long, sep=":") #For this function to work, R Needs Latitude:Longitude in a seperate Variable
+Winter2017FFAData$GPS_Label_And_Species <- paste("GPS Point: ",Winter2017FFAData$GPS.Label, "; Species Found: ", Winter2017FFAData$Species) #Creating a new Variable with GPS and Species information to quickly view on created map
+ObservationMap <- gvisMap(Winter2017FFAData, "LatLong", "GPS_Label_And_Species", 
+              options=list(showTip=TRUE, showLine=F, enableScrollWheel=TRUE, 
+                           mapType='satellite', useMapTypeControl=TRUE, width=800,height=400))
+plot(ObservationMap)
+```
+
+All the points look like they are right! 
+
+#Trail Points Check
+
+I went through our Trail points to try and digitize our trails. I looked at where our trails started and ended using our Trail GPX values and the Garmin BaseCamp Software. Then I turned the points into lines and seperated them into their respective trail. Then I turned the trails into a shapefile. 
+
+
+![Georeferenced Map](C:/Users/jesse/OneDrive - personalmicrosoftsoftware.ucla.edu/Winter 2017/FBQ Winter 2017/Pictures For R Markdown/Just GeoReferenced Map.PNG)
+
+![Map with Trail Points. Elephant Trail and RDA aren't included. CDC is missing chunks of its trail. ](C:/Users/jesse/OneDrive - personalmicrosoftsoftware.ucla.edu/Winter 2017/FBQ Winter 2017/Pictures For R Markdown/Points of Trails.PNG)
+
+![Map with Points Turned into Trails. Elephant Trail and RDA aren't included. CDC is missing chunks of its trail. ](C:/Users/jesse/OneDrive - personalmicrosoftsoftware.ucla.edu/Winter 2017/FBQ Winter 2017/Pictures For R Markdown/Lines of Trails.PNG)
+
+![Map with just our observations of species as points. I think we should use this to make our trails. Not sure if it will bias data. Thoughts? ](C:/Users/jesse/OneDrive - personalmicrosoftsoftware.ucla.edu/Winter 2017/FBQ Winter 2017/Pictures For R Markdown/ObservationsToMakeTrails.PNG)
+
