@@ -19,7 +19,7 @@ This pipeline turns data formatted as in Emily's abundance excel sheet into Conf
 ```{r Data Input, warning=FALSE}
 require(ggplot2)
 #Emily and Jesses Data
-PastAbundanceData <- read.csv("C:/Users/jesse/OneDrive - personalmicrosoftsoftware.ucla.edu/Winter 2017/FBQ Winter 2017/Past Abundance Results.csv")
+PastAbundanceData <- read.csv("../Tests and Their Results/Past Abundance Results.csv")
 #Removing NA VALUES
 PastAbundanceData <- na.omit(PastAbundanceData)
 #Turning AVG Abundances into numbers
@@ -48,7 +48,7 @@ p
 ```{r}
 require(ggplot2)
 #Emily and Jesses Data
-PastAbundanceData <- read.csv("C:/Users/jesse/OneDrive - personalmicrosoftsoftware.ucla.edu/Winter 2017/FBQ Winter 2017/Past Abundance Results.csv")
+PastAbundanceData <- read.csv("../Tests and Their Results/Past Abundance Results.csv")
 #Removing NA VALUES
 PastAbundanceData <- na.omit(PastAbundanceData)
 #Turning AVG Abundances into numbers
@@ -133,7 +133,7 @@ ggsave("PrimateConfidenceIntervals.png", width=13, height=8, dpi=300)
 ```{r}
 require(ggplot2)
 #Emily and Jesses Data
-PastAbundanceData <- read.csv("C:/Users/jesse/OneDrive - personalmicrosoftsoftware.ucla.edu/Winter 2017/FBQ Winter 2017/Past Abundance Results.csv")
+PastAbundanceData <- read.csv("../Tests and Their Results//Past Abundance Results.csv")
 #Removing NA VALUES
 PastAbundanceData <- na.omit(PastAbundanceData)
 #Turning AVG Abundances into numbers
